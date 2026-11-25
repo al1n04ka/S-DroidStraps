@@ -1,8 +1,5 @@
 package com.sdroidstraps.launcher.ui
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,8 +41,7 @@ fun FlagsScreen(
     flags: Map<String, String>,
     onUpdate: (Map<String, String>) -> Unit,
     onClear: () -> Unit,
-    onApply: () -> Unit,
-    status: String
+    onApply: () -> Unit
 ) {
     var newKey by remember { mutableStateOf("") }
     var newValue by remember { mutableStateOf("") }
@@ -55,26 +51,6 @@ fun FlagsScreen(
     var showAdd by remember { mutableStateOf(false) }
     var exportNote by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
-
-    fun exportJson() {
-        val json = FlagStore.toJson(flags)
-        val share = Intent(Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "S-DroidStraps flags")
-            putExtra(Intent.EXTRA_TEXT, json)
-        }
-        val launched = runCatching {
-            context.startActivity(
-                Intent.createChooser(share, "Export flags")
-                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            )
-        }
-        if (launched.isFailure) {
-            val clipboard = context.getSystemService(ClipboardManager::class.java)
-            clipboard?.setPrimaryClip(ClipData.newPlainText("S-DroidStraps flags", json))
-            exportNote = "No share target — JSON copied to clipboard"
-        }
-    }
 
     fun importJson(merge: Boolean) {
         FlagStore.fromJson(jsonInput).fold(
@@ -201,7 +177,7 @@ fun FlagsScreen(
         ) {
             SectionLabel("Active · ${flags.size}")
             Spacer(Modifier.weight(1f))
-            TextButton(onClick = { exportJson() }, enabled = flags.isNotEmpty()) {
+            TextButton(onClick = { if (exportFlagsJson(context, flags)) exportNote = "No share target — JSON copied to clipboard" }, enabled = flags.isNotEmpty()) {
                 Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(16.dp))
                 Spacer(Modifier.width(4.dp))
                 Text("Export")
@@ -240,14 +216,6 @@ fun FlagsScreen(
                 Spacer(Modifier.width(6.dp))
                 Text("Remove file", color = MaterialTheme.colorScheme.error)
             }
-        }
-
-        if (status.isNotBlank()) {
-            Text(
-                status,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }

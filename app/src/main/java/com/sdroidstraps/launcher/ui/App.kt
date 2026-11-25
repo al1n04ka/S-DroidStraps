@@ -1,13 +1,15 @@
 package com.sdroidstraps.launcher.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
@@ -40,6 +42,7 @@ private data class Tab(val label: String, val icon: ImageVector)
 private val TABS = listOf(
     Tab("Home", Icons.Filled.Home),
     Tab("Flags", Icons.AutoMirrored.Filled.List),
+    Tab("Mods", Icons.Filled.Star),
     Tab("Helper", Icons.Filled.Build),
     Tab("More", Icons.Filled.Settings)
 )
@@ -49,11 +52,14 @@ fun App() {
     val context = LocalContext.current
     var tab by rememberSaveable { mutableIntStateOf(0) }
     var flags by remember { mutableStateOf(FlagStore.load(context)) }
-    var status by remember { mutableStateOf("Ready") }
     var shizukuState by remember { mutableIntStateOf(0) }
     var rootMode by remember { mutableStateOf(false) }
     var autoApply by remember { mutableStateOf(FlagStore.isAutoApply(context)) }
     var robloxInstalled by remember { mutableStateOf(RobloxLauncher.isInstalled(context)) }
+
+    fun toast(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+    }
 
     fun refreshShizuku() {
         shizukuState = when {
@@ -86,16 +92,17 @@ fun App() {
 
     fun applyFlags(): Boolean {
         val result = ShizukuHelper.writeFlags(FlagStore.toJson(flags))
-        status = result.output
+        if (!result.ok) toast(result.output)
         return result.ok
     }
 
     fun clearFlags() {
         val result = ShizukuHelper.clearFlags()
-        status = result.output
         if (result.ok) {
             flags = emptyMap()
             FlagStore.save(context, emptyMap())
+        } else {
+            toast(result.output)
         }
     }
 
@@ -106,12 +113,8 @@ fun App() {
 
     fun launchRoblox() {
         if (autoApply) applyFlags()
-        val result = RobloxLauncher.launch(context)
+        RobloxLauncher.launch(context).onFailure { toast("Couldn't launch: ${it.message}") }
         robloxInstalled = RobloxLauncher.isInstalled(context)
-        status = result.fold(
-            onSuccess = { "Launching Roblox…" },
-            onFailure = { "Couldn't launch: ${it.message}" }
-        )
     }
 
     val adbCommand = remember(flags) { ShizukuHelper.adbCommand(FlagStore.toJson(flags)) }
@@ -153,26 +156,28 @@ fun App() {
                     robloxInstalled = robloxInstalled,
                     flagCount = flags.size,
                     shizukuState = shizukuState,
-                    status = status,
                     onLaunch = { launchRoblox() },
                     onApply = { applyFlags() },
                     onOpenFlags = { tab = 1 },
-                    onOpenHelper = { tab = 2 }
+                    onOpenHelper = { tab = 3 }
                 )
 
                 1 -> FlagsScreen(
                     flags = flags,
                     onUpdate = { updateFlags(it) },
                     onClear = { clearFlags() },
-                    onApply = { applyFlags() },
-                    status = status
+                    onApply = { applyFlags() }
                 )
 
-                2 -> HelperScreen(
+                2 -> ModsScreen(
+                    flags = flags,
+                    onUpdate = { updateFlags(it) }
+                )
+
+                3 -> HelperScreen(
                     shizukuState = shizukuState,
                     rootMode = rootMode,
                     adbCommand = adbCommand,
-                    status = status,
                     onRequestPermission = {
                         ShizukuHelper.requestPermission(PERMISSION_CODE)
                         refreshShizuku()
@@ -185,10 +190,9 @@ fun App() {
                         autoApply = it
                         FlagStore.setAutoApply(context, it)
                     },
-                    flagCount = flags.size,
+                    flags = flags,
                     shizukuState = shizukuState,
-                    onClearAll = { clearFlags() },
-                    status = status
+                    onClearAll = { clearFlags() }
                 )
             }
         }

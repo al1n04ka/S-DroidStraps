@@ -8,10 +8,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -21,17 +22,19 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 
 @Composable
 fun SettingsScreen(
     autoApply: Boolean,
     onAutoApply: (Boolean) -> Unit,
-    flagCount: Int,
+    flags: Map<String, String>,
     shizukuState: Int,
-    onClearAll: () -> Unit,
-    status: String
+    onClearAll: () -> Unit
 ) {
+    val context = LocalContext.current
+
     ScreenColumn {
         ScreenTitle("More")
 
@@ -53,7 +56,7 @@ fun SettingsScreen(
         StatusRow(
             icon = Icons.AutoMirrored.Filled.List,
             label = "Flags",
-            value = flagCount.toString()
+            value = flags.size.toString()
         )
         StatusRow(
             icon = if (shizukuState == 2) Icons.Filled.CheckCircle else Icons.Filled.Warning,
@@ -66,13 +69,21 @@ fun SettingsScreen(
             tone = if (shizukuState == 2) Tone.Ok else Tone.Warn
         )
 
+        TextButton(
+            onClick = { exportFlagsJson(context, flags) },
+            enabled = flags.isNotEmpty()
+        ) {
+            Icon(Icons.Filled.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+            Spacer(Modifier.width(6.dp))
+            Text("Export JSON")
+        }
+
         Hairline()
         SectionLabel("About")
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             HintText("S-DroidStraps 1.0 — an open launcher that never modifies the client.")
             HintText("All flags from your profile are written, including ones outside Roblox's allowlist. Roblox itself ignores unlisted names — that check runs inside the client and no launcher can switch it off.")
-            HintText("Not affiliated with Roblox Corporation. Use third-party tools at your own risk.")
         }
 
         StatusRow(
@@ -91,11 +102,5 @@ fun SettingsScreen(
             Spacer(Modifier.width(6.dp))
             Text("Reset flags", color = MaterialTheme.colorScheme.error)
         }
-
-        Text(
-            status,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }

@@ -1,5 +1,9 @@
 package com.sdroidstraps.launcher.ui
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -28,15 +32,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Intent
-import android.net.Uri
 import com.sdroidstraps.launcher.shell.ShizukuHelper
 
 @Composable
@@ -44,7 +43,6 @@ fun HelperScreen(
     shizukuState: Int,
     rootMode: Boolean,
     adbCommand: String,
-    status: String,
     onRequestPermission: () -> Unit
 ) {
     val context = LocalContext.current
@@ -151,11 +149,5 @@ fun HelperScreen(
             Text(if (copied) "Copied" else "Copy command")
         }
         HintText("Run it again after a reboot or a Roblox update.")
-
-        Text(
-            status,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
