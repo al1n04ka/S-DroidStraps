@@ -15,6 +15,7 @@ import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -39,7 +40,8 @@ fun HomeScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(52.dp),
-            enabled = robloxInstalled
+            enabled = robloxInstalled,
+            shape = MaterialTheme.shapes.small
         ) {
             Icon(Icons.Filled.PlayArrow, contentDescription = null, modifier = Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
@@ -62,27 +64,29 @@ fun HomeScreen(
         Hairline()
         SectionLabel("Status")
 
-        StatusRow(
-            icon = if (robloxInstalled) Icons.Filled.CheckCircle else Icons.Filled.Warning,
-            label = "Roblox",
-            value = if (robloxInstalled) "installed" else "not found",
-            tone = if (robloxInstalled) Tone.Ok else Tone.Warn
-        )
-        StatusRow(
-            icon = if (shizukuState == 2) Icons.Filled.CheckCircle else Icons.Filled.Warning,
-            label = "Shizuku",
-            value = when (shizukuState) {
-                2 -> "ready"
-                1 -> "access needed"
-                else -> "not running"
-            },
-            tone = if (shizukuState == 2) Tone.Ok else Tone.Warn
-        )
-        StatusRow(
-            icon = Icons.AutoMirrored.Filled.List,
-            label = "Flags in profile",
-            value = flagCount.toString()
-        )
+        SectionCard {
+            StatusRow(
+                icon = if (robloxInstalled) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                label = "Roblox",
+                value = if (robloxInstalled) "installed" else "not found",
+                tone = if (robloxInstalled) Tone.Ok else Tone.Warn
+            )
+            StatusRow(
+                icon = if (shizukuState == 2) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                label = "Shizuku",
+                value = when (shizukuState) {
+                    2 -> "ready"
+                    1 -> "access needed"
+                    else -> "not running"
+                },
+                tone = if (shizukuState == 2) Tone.Ok else Tone.Warn
+            )
+            StatusRow(
+                icon = Icons.AutoMirrored.Filled.List,
+                label = "Flags in profile",
+                value = flagCount.toString()
+            )
+        }
 
         if (shizukuState != 2) {
             TextButton(onClick = onOpenHelper) {

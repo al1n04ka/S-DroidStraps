@@ -15,6 +15,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -23,6 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sdroidstraps.launcher.data.UiStyle
+import com.sdroidstraps.launcher.ui.theme.LocalUiStyle
 
 enum class Tone { Ok, Warn, Error, Muted }
 
@@ -49,11 +52,15 @@ fun ScreenColumn(content: @Composable ColumnScope.() -> Unit) {
 
 @Composable
 fun ScreenTitle(title: String, subtitle: String? = null) {
+    val terminal = LocalUiStyle.current == UiStyle.Terminal
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(title, style = MaterialTheme.typography.headlineMedium)
+        Text(
+            if (terminal) "$ ${title.lowercase()}" else title,
+            style = MaterialTheme.typography.headlineMedium
+        )
         if (subtitle != null) {
             Text(
-                subtitle,
+                if (terminal) "# $subtitle" else subtitle,
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -63,8 +70,9 @@ fun ScreenTitle(title: String, subtitle: String? = null) {
 
 @Composable
 fun SectionLabel(text: String) {
+    val terminal = LocalUiStyle.current == UiStyle.Terminal
     Text(
-        text.uppercase(),
+        if (terminal) "## ${text.uppercase()}" else text.uppercase(),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         letterSpacing = 1.4.sp,
@@ -127,6 +135,31 @@ fun NumberedRow(number: Int, text: String) {
             text,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+@Composable
+fun SectionCard(
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    if (LocalUiStyle.current == UiStyle.Classic) {
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceContainer,
+            shape = MaterialTheme.shapes.medium,
+            modifier = modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                content = content
+            )
+        }
+    } else {
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            content = content
         )
     }
 }

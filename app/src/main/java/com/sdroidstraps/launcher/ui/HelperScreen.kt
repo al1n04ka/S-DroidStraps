@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -102,7 +101,11 @@ fun HelperScreen(
         )
 
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            Button(onClick = onRequestPermission, modifier = Modifier.weight(1f)) {
+            Button(
+                onClick = onRequestPermission,
+                modifier = Modifier.weight(1f),
+                shape = MaterialTheme.shapes.small
+            ) {
                 Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Request")
@@ -117,20 +120,22 @@ fun HelperScreen(
         Hairline()
         SectionLabel("Setup")
 
-        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            NumberedRow(1, "Install Shizuku from the Play Store or shizuku.rikka.app.")
-            NumberedRow(2, "On Android 11+ start it through Wireless debugging, right on the phone.")
-            NumberedRow(3, "Come back here and tap \"Request\".")
-            NumberedRow(4, "Apply flags and launch Roblox.")
+        SectionCard {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                NumberedRow(1, "Install Shizuku from the Play Store or shizuku.rikka.app.")
+                NumberedRow(2, "On Android 11+ start it through Wireless debugging, right on the phone.")
+                NumberedRow(3, "Come back here and tap \"Request\".")
+                NumberedRow(4, "Apply flags and launch Roblox.")
+            }
+            HintText("Root is not required. Asset mods (skybox, sounds, fonts) are not possible on stock Android — only flags apply.")
         }
-        HintText("Root is not required. Visual mods (skybox, crosshair) would need root — they are not included.")
 
         Hairline()
         SectionLabel("No Shizuku · PC + ADB")
 
         Surface(
             color = MaterialTheme.colorScheme.surfaceContainer,
-            shape = RoundedCornerShape(12.dp),
+            shape = MaterialTheme.shapes.small,
             modifier = Modifier.fillMaxWidth()
         ) {
             SelectionContainer {

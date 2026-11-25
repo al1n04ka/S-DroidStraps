@@ -14,6 +14,9 @@ client modification, no APK repacking, nothing patched.
 - Minimal dark UI with five screens: Home, Flags, Mods, Helper, More.
 - One-tap launch: writes the profile, stops Roblox, opens the client.
 - Flag profiles with presets (Default, Performance, Experimental, FPS caps 60–144).
+- Four UI styles (Classic cards, Bloxstrap top tabs, Minimal square, Terminal mono)
+  with six built-in accent colors plus a custom hue slider and hex input.
+- First-launch onboarding dialog with the Shizuku setup steps.
 - Mods tab: one-tap toggles for gray sky, post-FX off, flat shadows, no grass, low textures, no MSAA, render quality, CSG LOD and a 240 FPS cap.
 - Add, remove and edit flags; **import JSON** (merge or replace) and **export JSON**
   through the Android share sheet.

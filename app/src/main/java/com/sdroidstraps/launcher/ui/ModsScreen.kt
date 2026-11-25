@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -27,30 +28,32 @@ fun ModsScreen(
             Hairline()
             SectionLabel(category)
 
-            mods.forEach { mod ->
-                val enabled = isModEnabled(flags, mod)
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(mod.title, style = androidx.compose.material3.MaterialTheme.typography.bodyMedium)
-                        HintText(mod.description)
-                        if (isModExperimental(mod)) {
-                            Text(
-                                "experimental · may be ignored",
-                                style = androidx.compose.material3.MaterialTheme.typography.labelSmall,
-                                color = androidx.compose.material3.MaterialTheme.colorScheme.tertiary
-                            )
+            SectionCard {
+                mods.forEach { mod ->
+                    val enabled = isModEnabled(flags, mod)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(mod.title, style = MaterialTheme.typography.bodyMedium)
+                            HintText(mod.description)
+                            if (isModExperimental(mod)) {
+                                Text(
+                                    "experimental · may be ignored",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
                         }
+                        Switch(
+                            checked = enabled,
+                            onCheckedChange = { on ->
+                                onUpdate(if (on) flags + mod.flags else flags - mod.flags.keys)
+                            }
+                        )
                     }
-                    Switch(
-                        checked = enabled,
-                        onCheckedChange = { on ->
-                            onUpdate(if (on) flags + mod.flags else flags - mod.flags.keys)
-                        }
-                    )
                 }
             }
         }

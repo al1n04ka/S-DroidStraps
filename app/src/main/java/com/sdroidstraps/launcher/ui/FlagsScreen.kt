@@ -71,7 +71,8 @@ fun FlagsScreen(
             items(PRESETS) { preset ->
                 AssistChip(
                     onClick = { onUpdate(preset.flags) },
-                    label = { Text(preset.title) }
+                    label = { Text(preset.title) },
+                    shape = MaterialTheme.shapes.small
                 )
             }
         }
@@ -118,7 +119,8 @@ fun FlagsScreen(
                 Button(
                     onClick = { importJson(merge = true) },
                     modifier = Modifier.weight(1f),
-                    enabled = jsonInput.isNotBlank()
+                    enabled = jsonInput.isNotBlank(),
+                    shape = MaterialTheme.shapes.small
                 ) {
                     Text("Merge")
                 }
@@ -187,11 +189,13 @@ fun FlagsScreen(
             HintText(exportNote ?: "")
         }
 
-        if (flags.isEmpty()) {
-            HintText("Empty: Roblox uses its default flags")
-        } else {
-            flags.toSortedMap().forEach { (key, value) ->
-                FlagRow(key = key, value = value, onRemove = { onUpdate(flags - key) })
+        SectionCard {
+            if (flags.isEmpty()) {
+                HintText("Empty: Roblox uses its default flags")
+            } else {
+                flags.toSortedMap().forEach { (key, value) ->
+                    FlagRow(key = key, value = value, onRemove = { onUpdate(flags - key) })
+                }
             }
         }
 
@@ -201,7 +205,7 @@ fun FlagsScreen(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(onClick = onApply, modifier = Modifier.weight(1f)) {
+            Button(onClick = onApply, modifier = Modifier.weight(1f), shape = MaterialTheme.shapes.small) {
                 Icon(Icons.Filled.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text("Apply")
