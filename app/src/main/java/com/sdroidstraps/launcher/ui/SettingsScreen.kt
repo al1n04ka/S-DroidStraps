@@ -20,6 +20,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +35,12 @@ fun SettingsScreen(
     onClearAll: () -> Unit
 ) {
     val context = LocalContext.current
+    @Suppress("DEPRECATION")
+    val versionName = remember {
+        runCatching {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName
+        }.getOrNull() ?: "1.1"
+    }
 
     ScreenColumn {
         ScreenTitle("More")
@@ -82,14 +89,14 @@ fun SettingsScreen(
         SectionLabel("About")
 
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            HintText("S-DroidStraps 1.0 — an open launcher that never modifies the client.")
+            HintText("S-DroidStraps $versionName — an open launcher that never modifies the client.")
             HintText("All flags from your profile are written, including ones outside Roblox's allowlist. Roblox itself ignores unlisted names — that check runs inside the client and no launcher can switch it off.")
         }
 
         StatusRow(
             icon = Icons.Filled.Info,
             label = "Version",
-            value = "1.0"
+            value = versionName
         )
 
         TextButton(onClick = onClearAll) {
