@@ -1,4 +1,5 @@
 # S-DroidStraps
+Not affiliated with https://github.com/meowstrapper/DroidBlox or https://github.com/meowstrapper/droidblox-kt
 
 <p align="center">
   <img src="icon-512.png" width="160" alt="S-DroidStraps">
