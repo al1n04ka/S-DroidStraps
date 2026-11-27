@@ -2,18 +2,13 @@ package com.sdroidstraps.launcher.shell
 
 import android.content.Context
 import android.content.pm.PackageManager
-import android.util.Base64
 import rikka.shizuku.Shizuku
 
 data class ShellResult(val ok: Boolean, val output: String)
 
 object ShizukuHelper {
     const val SHIZUKU_PACKAGE = "moe.shizuku.privileged.api"
-    const val ROBLOX_PACKAGE = "com.roblox.client"
-
-    private const val TMP_FILE = "/data/local/tmp/ClientAppSettings.json"
-    private const val APP_DIR = "/data/data/com.roblox.client/files/exe/ClientSettings"
-    private const val APP_FILE = "$APP_DIR/ClientAppSettings.json"
+    const val ROBLOX_PACKAGE = FlagsScript.ROBLOX_PACKAGE
 
     fun isInstalled(context: Context): Boolean = runCatching {
         context.packageManager.getPackageInfo(SHIZUKU_PACKAGE, 0)
@@ -37,52 +32,27 @@ object ShizukuHelper {
         if (!isRunning()) return ShellResult(false, "Shizuku is not running — open Shizuku and try again")
         if (!hasPermission()) return ShellResult(false, "No Shizuku access — tap \"Request access\"")
 
-        val encoded = Base64.encodeToString(json.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-        val script = StringBuilder()
-        script.append("mkdir -p /data/local/tmp; ")
-        script.append("printf '%s' '").append(encoded)
-            .append("' | base64 -d > ").append(TMP_FILE).append("; ")
-        script.append("chmod 644 ").append(TMP_FILE).append("; ")
-        if (isRoot()) {
-            script.append("mkdir -p ").append(APP_DIR).append("; ")
-            script.append("cat ").append(TMP_FILE).append(" > ").append(APP_FILE).append("; ")
-            script.append("chmod 644 ").append(APP_FILE).append("; ")
-        }
-        script.append("am force-stop ").append(ROBLOX_PACKAGE).append("; ")
-        script.append("echo OK")
-
-        val result = exec(script.toString())
-        if (!result.output.contains("OK")) return result
+        val result = exec(FlagsScript.write(json, isRoot()))
+        if (!result.output.contains("OK") || !result.ok) return result
         val suffix = if (isRoot()) " and app data" else ""
-        return ShellResult(true, "Flags written to $TMP_FILE$suffix")
+        return ShellResult(true, "Flags written to ${FlagsScript.TMP_FILE}$suffix")
     }
 
     fun clearFlags(): ShellResult {
         if (!isRunning()) return ShellResult(false, "Shizuku is not running")
         if (!hasPermission()) return ShellResult(false, "No Shizuku access")
 
-        val script = StringBuilder()
-        script.append("rm -f ").append(TMP_FILE).append("; ")
-        if (isRoot()) {
-            script.append("rm -f ").append(APP_FILE).append("; ")
-        }
-        script.append("am force-stop ").append(ROBLOX_PACKAGE).append("; ")
-        script.append("echo OK")
-
-        val result = exec(script.toString())
-        return if (result.output.contains("OK")) {
+        val result = exec(FlagsScript.clear(isRoot()))
+        return if (result.ok && result.output.contains("OK")) {
             ShellResult(true, "Flag file removed, Roblox stopped")
         } else {
             result
         }
     }
 
-    fun readFlags(): ShellResult = exec("cat $TMP_FILE")
+    fun readFlags(): ShellResult = exec("cat ${FlagsScript.TMP_FILE}")
 
-    fun adbCommand(json: String): String {
-        val encoded = Base64.encodeToString(json.toByteArray(Charsets.UTF_8), Base64.NO_WRAP)
-        return "adb shell \"echo '$encoded' | base64 -d > $TMP_FILE && chmod 644 $TMP_FILE && am force-stop $ROBLOX_PACKAGE\""
-    }
+    fun adbCommand(json: String): String = FlagsScript.adbCommand(json)
 
     @Suppress("SwallowedException")
     private fun newProcess(command: Array<String>): Process? = try {

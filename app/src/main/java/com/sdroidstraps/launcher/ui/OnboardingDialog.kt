@@ -63,6 +63,7 @@ fun ShizukuOnboardingDialog(
             ) {
                 Text("Set up Shizuku", style = MaterialTheme.typography.headlineSmall)
                 HintText("S-DroidStraps writes flags through Shizuku, no root needed. One-time setup.")
+                HintText("Already rooted with KernelSU, APatch or Magisk? Choose Root in Helper instead.")
 
                 NumberedRow(1, "Install Shizuku from the Play Store or shizuku.rikka.app.")
                 NumberedRow(2, "Start it with Wireless debugging, right on the phone.")

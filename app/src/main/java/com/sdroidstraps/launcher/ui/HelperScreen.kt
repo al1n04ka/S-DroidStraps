@@ -6,6 +6,7 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +22,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -35,14 +37,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import com.sdroidstraps.launcher.data.ShellMode
 import com.sdroidstraps.launcher.shell.ShizukuHelper
 
 @Composable
 fun HelperScreen(
     shizukuState: Int,
     rootMode: Boolean,
+    shellMode: ShellMode,
+    rootManager: String?,
+    rootAvailable: Boolean,
     adbCommand: String,
-    onRequestPermission: () -> Unit
+    onRequestPermission: () -> Unit,
+    onCheckRoot: () -> Unit,
+    onOpenManager: () -> Unit,
+    onShellMode: (ShellMode) -> Unit
 ) {
     val context = LocalContext.current
     var copied by remember { mutableStateOf(false) }
@@ -70,8 +79,9 @@ fun HelperScreen(
     }
 
     ScreenColumn {
-        ScreenTitle("Shizuku", "Shell access without root")
+        ScreenTitle("Shell access", "Shizuku · KernelSU · Magisk · APatch")
 
+        SectionLabel("Shizuku")
         StatusRow(
             icon = if (shizukuInstalled) Icons.Filled.CheckCircle else Icons.Filled.Warning,
             label = "Installed",
@@ -94,7 +104,7 @@ fun HelperScreen(
             icon = Icons.Filled.Info,
             label = "Mode",
             value = when {
-                rootMode -> "root (Sui/Magisk)"
+                rootMode -> "root (${rootManager ?: "su"})"
                 shizukuState >= 1 -> "ADB"
                 else -> "—"
             }
@@ -116,6 +126,63 @@ fun HelperScreen(
                 Text("Open")
             }
         }
+
+        Hairline()
+        SectionLabel("Root")
+
+        SectionCard {
+            StatusRow(
+                icon = if (rootManager != null) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                label = "Manager",
+                value = rootManager ?: "not found",
+                tone = if (rootManager != null) Tone.Ok else Tone.Warn
+            )
+            StatusRow(
+                icon = if (rootAvailable) Icons.Filled.CheckCircle else Icons.Filled.Warning,
+                label = "Root shell",
+                value = if (rootAvailable) "granted" else "not granted",
+                tone = if (rootAvailable) Tone.Ok else Tone.Warn
+            )
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                Button(
+                    onClick = onCheckRoot,
+                    modifier = Modifier.weight(1f),
+                    shape = MaterialTheme.shapes.small
+                ) {
+                    Icon(Icons.Filled.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text("Grant root")
+                }
+                TextButton(onClick = onOpenManager, modifier = Modifier.weight(1f)) {
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(6.dp))
+                    Text(if (rootManager != null) "Open" else "Not found")
+                }
+            }
+            HintText("Works with KernelSU, APatch, Magisk and SuperSU — approves the su prompt once, then applies flags without Shizuku.")
+        }
+
+        Hairline()
+        SectionLabel("Shell method")
+
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            ShellMode.entries.forEach { mode ->
+                FilterChip(
+                    selected = shellMode == mode,
+                    onClick = { onShellMode(mode) },
+                    label = { Text(mode.label) },
+                    shape = MaterialTheme.shapes.small
+                )
+            }
+        }
+        HintText("Auto uses Shizuku when granted, otherwise root if available.")
 
         Hairline()
         SectionLabel("Setup")

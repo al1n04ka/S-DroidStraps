@@ -11,8 +11,11 @@ client modification, no APK repacking, nothing patched.
 
 ## Features
 
-- Minimal dark UI with five screens: Home, Flags, Mods, Helper, More.
+- Five screens: Home, Flags, Mods, Helper, More.
 - One-tap launch: writes the profile, stops Roblox, opens the client.
+- Shell access via Shizuku (ADB or root) **or root `su`**: KernelSU, KernelSU Next,
+  APatch, Magisk and SuperSU are detected, with Auto / Shizuku / Root selection
+  in the Helper tab.
 - Flag profiles with presets (Default, Performance, Experimental, FPS caps 60–144).
 - Four UI styles (Classic cards, Bloxstrap top tabs, Minimal square, Terminal mono)
   with six built-in accent colors plus a custom hue slider and hex input.
@@ -23,8 +26,8 @@ client modification, no APK repacking, nothing patched.
 - Every flag in the profile is written to the file, including names outside
   Roblox's official allowlist (see the note below).
 - Guided Shizuku setup plus a copyable one-line ADB command for PC users.
-- Works without root; root (Magisk/Sui) additionally writes to the app's private
-  `ClientSettings` path.
+- Works without root; root (Shizuku root, KernelSU, APatch, Magisk, Sui) also
+  writes to Roblox's private `ClientSettings` path.
 
 ## Requirements
 

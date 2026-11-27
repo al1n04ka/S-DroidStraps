@@ -1,5 +1,8 @@
 package com.sdroidstraps.launcher.ui
 
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -53,9 +56,13 @@ import androidx.compose.ui.unit.sp
 import com.sdroidstraps.launcher.data.Appearance
 import com.sdroidstraps.launcher.data.AppearanceStore
 import com.sdroidstraps.launcher.data.FlagStore
+import com.sdroidstraps.launcher.data.ShellMode
+import com.sdroidstraps.launcher.data.ShellModeStore
 import com.sdroidstraps.launcher.data.UiStyle
 import com.sdroidstraps.launcher.roblox.RobloxLauncher
+import com.sdroidstraps.launcher.shell.RootHelper
 import com.sdroidstraps.launcher.shell.ShizukuHelper
+import com.sdroidstraps.launcher.shell.ShellResult
 import com.sdroidstraps.launcher.ui.theme.SDroidStrapsTheme
 import rikka.shizuku.Shizuku
 
@@ -114,6 +121,9 @@ private fun AppShell(
     var flags by remember { mutableStateOf(FlagStore.load(context)) }
     var shizukuState by remember { mutableIntStateOf(0) }
     var rootMode by remember { mutableStateOf(false) }
+    var shellMode by remember { mutableStateOf(ShellModeStore.load(context)) }
+    var rootManager by remember { mutableStateOf(RootHelper.manager(context)) }
+    var rootAvailable by remember { mutableStateOf(false) }
     var autoApply by remember { mutableStateOf(FlagStore.isAutoApply(context)) }
     var robloxInstalled by remember { mutableStateOf(RobloxLauncher.isInstalled(context)) }
 
@@ -150,14 +160,65 @@ private fun AppShell(
         }
     }
 
+    fun checkRoot() {
+        rootManager = RootHelper.manager(context)
+        val label = rootManager?.label ?: "su"
+        Thread {
+            val ok = RootHelper.checkRoot()
+            Handler(Looper.getMainLooper()).post {
+                rootAvailable = ok
+                toast(
+                    if (ok) {
+                        "Root granted via $label"
+                    } else {
+                        "No root access — allow this app in $label"
+                    }
+                )
+            }
+        }.start()
+    }
+
+    fun openRootManager() {
+        val manager = rootManager ?: return
+        val intent = context.packageManager.getLaunchIntentForPackage(manager.packageName)
+        if (intent != null) {
+            context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } else {
+            toast("Can't open ${manager.label}")
+        }
+    }
+
+    fun writeFlags(): ShellResult {
+        val json = FlagStore.toJson(flags)
+        return when (shellMode) {
+            ShellMode.Root -> RootHelper.writeFlags(json)
+            ShellMode.Shizuku -> ShizukuHelper.writeFlags(json)
+            ShellMode.Auto -> when {
+                ShizukuHelper.hasPermission() -> ShizukuHelper.writeFlags(json)
+                rootAvailable -> RootHelper.writeFlags(json)
+                else -> ShellResult(false, "No shell access — set up Shizuku or grant root")
+            }
+        }
+    }
+
     fun applyFlags(): Boolean {
-        val result = ShizukuHelper.writeFlags(FlagStore.toJson(flags))
+        val result = writeFlags()
         if (!result.ok) toast(result.output)
         return result.ok
     }
 
     fun clearFlags() {
-        val result = ShizukuHelper.clearFlags()
+        val result = when (shellMode) {
+            ShellMode.Root -> RootHelper.clearFlags()
+            ShellMode.Shizuku -> ShizukuHelper.clearFlags()
+            ShellMode.Auto -> if (ShizukuHelper.hasPermission()) {
+                ShizukuHelper.clearFlags()
+            } else if (rootAvailable) {
+                RootHelper.clearFlags()
+            } else {
+                ShellResult(false, "No shell access — set up Shizuku or grant root")
+            }
+        }
         if (result.ok) {
             flags = emptyMap()
             FlagStore.save(context, emptyMap())
@@ -181,7 +242,19 @@ private fun AppShell(
     @Suppress("DEPRECATION")
     val versionName = remember {
         runCatching { context.packageManager.getPackageInfo(context.packageName, 0).versionName }
-            .getOrNull() ?: "1.2"
+            .getOrNull() ?: "1.3"
+    }
+    val shellLabel = when (shellMode) {
+        ShellMode.Auto -> when {
+            ShizukuHelper.hasPermission() -> "Auto · Shizuku"
+            rootAvailable -> "Auto · Root"
+            else -> "Auto · not ready"
+        }
+
+        ShellMode.Shizuku -> "Shizuku"
+        ShellMode.Root -> "Root · ${
+            if (rootAvailable) rootManager?.label ?: "su" else "not granted"
+        }"
     }
 
     Scaffold(
@@ -240,6 +313,7 @@ private fun AppShell(
                     robloxInstalled = robloxInstalled,
                     flagCount = flags.size,
                     shizukuState = shizukuState,
+                    shellLabel = shellLabel,
                     onLaunch = { launchRoblox() },
                     onApply = { applyFlags() },
                     onOpenFlags = { tab = 1 },
@@ -261,10 +335,20 @@ private fun AppShell(
                 3 -> HelperScreen(
                     shizukuState = shizukuState,
                     rootMode = rootMode,
+                    shellMode = shellMode,
+                    rootManager = rootManager?.label,
+                    rootAvailable = rootAvailable,
                     adbCommand = adbCommand,
                     onRequestPermission = {
                         ShizukuHelper.requestPermission(PERMISSION_CODE)
                         refreshShizuku()
+                    },
+                    onCheckRoot = { checkRoot() },
+                    onOpenManager = { openRootManager() },
+                    onShellMode = {
+                        shellMode = it
+                        ShellModeStore.save(context, it)
+                        if (it == ShellMode.Root && !rootAvailable) checkRoot()
                     }
                 )
 

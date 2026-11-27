@@ -27,6 +27,7 @@ fun HomeScreen(
     robloxInstalled: Boolean,
     flagCount: Int,
     shizukuState: Int,
+    shellLabel: String,
     onLaunch: () -> Unit,
     onApply: () -> Unit,
     onOpenFlags: () -> Unit,
@@ -81,11 +82,18 @@ fun HomeScreen(
                 },
                 tone = if (shizukuState == 2) Tone.Ok else Tone.Warn
             )
-            StatusRow(
-                icon = Icons.AutoMirrored.Filled.List,
-                label = "Flags in profile",
-                value = flagCount.toString()
-            )
+        StatusRow(
+            icon = Icons.AutoMirrored.Filled.List,
+            label = "Flags in profile",
+            value = flagCount.toString()
+        )
+        StatusRow(
+            icon = if (shellLabel.contains("not")) Icons.Filled.Warning else Icons.Filled.CheckCircle,
+            label = "Shell",
+            value = shellLabel,
+            tone = if (shellLabel.contains("not")) Tone.Warn else Tone.Ok
+        )
+
         }
 
         if (shizukuState != 2) {
